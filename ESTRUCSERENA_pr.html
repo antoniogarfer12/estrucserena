@@ -814,7 +814,7 @@ a.call-fab{text-decoration:none;}
           <dt>Horario</dt><dd>Lunes a viernes, 8:30–14:00 y 16:30–20:00</dd>
         </dl>
       </div>
-      <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
+      <form id="contactForm" action="https://script.google.com/macros/s/AKfycbxLlE85S04kMSG33B-asMl3PzSO1PxGq_CQdnWLazQLH-cH8HHtXZgdYTbw7lIAsohANw/exec" method="POST">
         <input type="text" name="nombre" placeholder="Nombre y empresa" aria-label="Nombre y empresa" autocomplete="name" required>
         <input type="email" name="email" placeholder="Email de contacto" aria-label="Email de contacto" autocomplete="email" required>
         <input type="tel" name="telefono" placeholder="Teléfono (opcional)" aria-label="Teléfono" autocomplete="tel">
@@ -887,10 +887,11 @@ function lockScroll(on){
   var v=on?'hidden':'';
   document.documentElement.style.overflow=v; document.body.style.overflow=v;
 }
-// Formulario de contacto: envía los datos directamente a antgarfer12@gmail.com (servicio Web3Forms),
-// sin abrir el programa de correo del visitante. La clave de acceso está asociada a ese email.
+// Formulario de contacto: envía los datos a un script de Google Apps Script (cuenta de antgarfer12@gmail.com)
+// que manda el correo desde Gmail, sin abrir el programa de correo del visitante.
+// Se envía como formulario (application/x-www-form-urlencoded) para evitar la petición previa de CORS.
 (function(){
-  var WEB3FORMS_KEY='256031c2-9033-45f0-ad9b-a609b4914d7d';
+  var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxLlE85S04kMSG33B-asMl3PzSO1PxGq_CQdnWLazQLH-cH8HHtXZgdYTbw7lIAsohANw/exec';
   var form=document.getElementById('contactForm'), status=document.getElementById('formStatus');
   if(!form) return;
   function show(msg,cls){ status.textContent=msg; status.className='form-status '+cls; status.hidden=false; }
@@ -900,14 +901,8 @@ function lockScroll(on){
     if(val('_honey')) return;
     var btn=form.querySelector('button[type="submit"]'), txt=btn.textContent;
     btn.disabled=true; btn.textContent='Enviando…'; status.hidden=true;
-    var data={}; [].forEach.call(form.elements,function(el){ if(el.name && el.name!=='_honey') data[el.name]=el.value.trim(); });
-    data.access_key=WEB3FORMS_KEY;
-    data.subject='Solicitud de presupuesto — '+val('nombre');
-    data.from_name='Web ESTRUCSERENA';
-    data.replyto=data.email;
-    fetch('https://api.web3forms.com/submit',{
-      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body:JSON.stringify(data)
-    }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok,j:j}; }); })
+    var data=new URLSearchParams(); [].forEach.call(form.elements,function(el){ if(el.name && el.name!=='_honey') data.append(el.name,el.value.trim()); });
+    fetch(SCRIPT_URL,{ method:'POST', body:data }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok,j:j}; }); })
     .then(function(res){
       if(res.ok && res.j.success===true){
         show('¡Gracias! Hemos recibido tu solicitud y te responderemos lo antes posible.','ok');
